@@ -3,9 +3,9 @@
 Examples for some of the **git hooks** git has implemented
 
 ## git hooks in this repository
-| Hook | Description |
-| ---- | ----------- |
-| **post-commit** | After the entire commit process is completed, the post-commit hook runs. It doesn’t take any parameters, but you can easily get the last commit by running **```git log -1 HEAD```**.
+| Hook | Description | Requirements |
+| ---- | ----------- | ------------ |
+| **post-commit** | After the entire commit process is completed, the post-commit hook runs. It doesn’t take any parameters, but you can easily get the last commit by running **```git log -1 HEAD```**. | Requires two folders. '**```src```**' for development and '**```prod```**' for production
 
 ## Installation
 
