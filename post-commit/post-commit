@@ -1,0 +1,3 @@
+#!C:/Program\ Files/Git/usr/bin/sh.exe
+exec powershell.exe -NoProfile -NoLogo -ExecutionPolicy ByPass -File ".git/hooks/Start-PostCommit.ps1"
+exit
