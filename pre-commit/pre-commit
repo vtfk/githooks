@@ -1,0 +1,3 @@
+#!C:/Program\ Files/Git/usr/bin/sh.exe
+exec powershell.exe -NoLogo -ExecutionPolicy ByPass -File ".git/hooks/Start-PreCommit.ps1"
+exit

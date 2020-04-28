@@ -5,7 +5,8 @@ Examples for some of the **git hooks** git has implemented
 ## git hooks in this repository
 | Hook | Description | Requirements |
 | ---- | ----------- | ------------ |
-| **post-commit** | After the entire commit process is completed, the post-commit hook runs. It doesn’t take any parameters, but you can easily get the last commit by running **```git log -1 HEAD```**. | Requires two folders. '**```src```**' for development and '**```prod```**' for production
+| **pre-commit** | It’s used to inspect the snapshot that’s about to be committed, to see if you’ve forgotten something, to make sure tests run, or to examine whatever you need to inspect in the code. | Requires two folders. **```src```** for development and **```tests```** to include Pester test files
+| **post-commit** | After the entire commit process is completed, the post-commit hook runs. It doesn’t take any parameters, but you can easily get the last commit by running **```git log -1 HEAD```**. | Requires two folders. **```src```** for development and **```prod```** for production |
 
 ## Installation
 
