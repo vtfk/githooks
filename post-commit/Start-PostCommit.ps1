@@ -1,8 +1,14 @@
-﻿Function Get-Tracked
+﻿$devPathName = "src"
+$prodPathName = "prod"
+$hookName = "post-commit"
+$flushProdOnHookRun = $True
+$defaultBranch = "main" # for new repositories, this is probably "main", for older repositories, this is probably "master". Find it by running "git branch"
+
+Function Get-Tracked
 {
     $currentLocation = Get-Location
     Set-Location -Path $devPath
-    $files = git ls-tree -r master --name-status
+    $files = git ls-tree -r $defaultBranch --name-status
     Set-Location $currentLocation
     
     return $files
@@ -42,7 +48,7 @@ Function Update-Prod
         }
         catch
         {
-            Write-Host "Failed to flush '$devPath' : $_" -ForegroundColor Red
+            Write-Host "Failed to flush '$prodPath' : $_" -ForegroundColor Red
             exit 1
         }
     }
@@ -71,9 +77,14 @@ Function Update-Prod
 }
 
 # paths used in repo
-$devPath = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "\..\..\src"
-$prodPath = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "\..\..\prod"
+$devPath = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "\..\..\$devPathName"
+$prodPath = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "\..\..\$prodPathName"
 
-Write-Host "=== git post-commit hook ==="
+Write-Host "=== git $hookName hook ==="
 $tracked = Get-Tracked
-Update-Prod
+if ($flushProdOnHookRun) {
+    Update-Prod
+}
+else {
+    Update-Prod -DoNotFlushPath
+}
