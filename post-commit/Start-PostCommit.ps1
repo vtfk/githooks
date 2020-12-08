@@ -3,6 +3,7 @@ $prodPathName = "prod"
 $hookName = "post-commit"
 $flushProdOnHookRun = $True
 $defaultBranch = "main" # for new repositories, this is probably "main", for older repositories, this is probably "master". Find it by running "git branch"
+$onlyFilesFromDefaultBranch = $True # if set to True, $prodPathName will always only have files/content from defaultBranch. If set to False, $prodPathName will always have files/content current to the last commit (from which ever branch the commit were performed!)
 
 Function Get-Tracked
 {
@@ -16,11 +17,6 @@ Function Get-Tracked
 
 Function Update-Prod
 {
-    param(
-        [Parameter()]
-        [switch]$DoNotFlushPath
-    )
-
     if (!(Test-Path -Path $prodPath))
     {
         try
@@ -29,7 +25,7 @@ Function Update-Prod
             New-Item -Path $prodPath -ItemType Directory -Force -Confirm:$False -ErrorAction Stop | Out-Null
 
             # setting the flag DoNotFlushPath
-            $DoNotFlushPath = $True
+            $flushProdOnHookRun = $False
         }
         catch
         {
@@ -38,7 +34,7 @@ Function Update-Prod
         }
     }
 
-    if (!$DoNotFlushPath)
+    if ($flushProdOnHookRun)
     {
         try
         {
@@ -55,10 +51,13 @@ Function Update-Prod
 
     # copy tracked folders and files from devPath to prodPath
     $tracked | % {
-        Write-Host "Copying '$_' : " -ForegroundColor Cyan -NoNewline
+        if (!$onlyFilesFromDefaultBranch) { Write-Host "Copying '$_' : " -ForegroundColor Cyan -NoNewline }
+        else { Write-Host "Copying '$($defaultBranch):$($_)' : " -ForegroundColor Cyan -NoNewline }
+
         try
         {
             $subDirs = [System.IO.Path]::GetDirectoryName($_)
+            $fileName = [System.IO.Path]::GetFileName($_)
             if (![string]::IsNullOrEmpty($subDirs))
             {
                 New-Item -Path "$prodPath\$subDirs" -ItemType Directory -Force -Confirm:$False | Out-Null
@@ -66,12 +65,18 @@ Function Update-Prod
     
             if ($_.Contains("/")) { $destPath = "$prodPath\$($_.Replace("/", "\"))" }
             else { $destPath = $prodPath }
-            Copy-Item -Path "$devPath\$($_.Replace("/", "\"))" -Destination $destPath -Force -Recurse -Confirm:$False -ErrorAction Stop
+
+            if (!$onlyFilesFromDefaultBranch) { Copy-Item -Path "$devPath\$($_.Replace("/", "\"))" -Destination $destPath -Force -Recurse -Confirm:$False -ErrorAction Stop }
+            else {
+                if ($_.Contains("/")) { git show "$($defaultBranch):$devPathName/$_" > "$destPath" }
+                else { git show "$($defaultBranch):$devPathName/$_" > "$destPath\$fileName" }
+            }
             Write-Host "OK" -ForegroundColor Green
         }
         catch
         {
-            Write-Host "Failed: $_" -ForegroundColor Red
+            #Write-Host "Failed: $_" -ForegroundColor Red
+            Write-Error -Exception $_ -ErrorAction Continue
         }
     }
 }
@@ -82,9 +87,4 @@ $prodPath = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) "\..\..\
 
 Write-Host "=== git $hookName hook ==="
 $tracked = Get-Tracked
-if ($flushProdOnHookRun) {
-    Update-Prod
-}
-else {
-    Update-Prod -DoNotFlushPath
-}
+Update-Prod
